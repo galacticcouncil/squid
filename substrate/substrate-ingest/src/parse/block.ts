@@ -242,13 +242,18 @@ export class BlockParser {
 }
 
 
-export function parseRawBlock(spec: Spec, validators: Account[], raw: RawBlock): BlockData {
+export function parseRawBlock(spec, validators, raw): BlockData {
     let bp = new BlockParser(spec, validators, raw)
-    return  {
-        header: bp.header(),
-        extrinsics: bp.extrinsics(),
-        events: bp.events(),
-        calls: bp.calls(),
-        warnings: bp.warnings()
-    }
+    let extrinsics = bp.extrinsics()
+    let extrinsicIds = new Set(extrinsics.map(e => e.id))
+
+    // Null out extrinsic_id for events whose extrinsic was filtered
+    let events = bp.events().map(e => {
+        if (e.extrinsic_id && !extrinsicIds.has(e.extrinsic_id)) {
+            e.extrinsic_id = undefined
+        }
+        return e
+    })
+
+    return { header: bp.header(), extrinsics, events, calls: bp.calls(), warnings: bp.warnings() }
 }
