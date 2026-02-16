@@ -40,11 +40,12 @@ export function decodeExtrinsic(
     let preamble = meta & 0b11000000
     switch (preamble) {
         case Preamble.Bare:
-            console.log('decoding bare extrinsic');
-            return {
+            const e = {
                 version,
                 call: codec.decode(chainDescription.call, src)
-            }
+            };
+            console.log('decoding bare extrinsic', e);
+            return e;
         case Preamble.Signed:
             assert(version == 4, 'signed extrinsics only supported for v4');
             return {
