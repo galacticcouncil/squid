@@ -1,4 +1,5 @@
 import {ByteSink, Codec, Sink, Src} from "@subsquid/scale-codec"
+import {unexpectedCase} from '@subsquid/util-internal'
 import assert from "assert"
 import {ChainDescription} from "./chainDescription"
 
@@ -16,6 +17,10 @@ export interface Extrinsic {
     signature?: ExtrinsicSignature
 }
 
+enum Preamble {
+    Bare = 0,
+    Signed = 128,
+}
 
 export function decodeExtrinsic(
     rawExtrinsic: string | Uint8Array,
@@ -28,24 +33,26 @@ export function decodeExtrinsic(
     src.compact()
 
     let meta = src.u8()
-    let signed = meta & 0b10000000
     let version = meta & 0b01111111
 
-    //assert(version == 4, 'unsupported extrinsic version')
+    assert([4, 5].includes(version), 'unsupported extrinsic version ' + version)
 
-    if (signed) {
-        let signature = codec.decode(chainDescription.signature, src)
-        let call = codec.decode(chainDescription.call, src)
-        return {
-            version: 4,
-            signature,
-            call
-        }
-    } else {
-        return {
-            version: 4,
-            call: codec.decode(chainDescription.call, src)
-        }
+    let preamble = meta & 0b11000000
+    switch (preamble) {
+        case Preamble.Bare:
+            return {
+                version,
+                call: codec.decode(chainDescription.call, src)
+            }
+        case Preamble.Signed:
+            assert(version == 4, 'signed extrinsics only supported for v4');
+            return {
+                version,
+                signature: codec.decode(chainDescription.signature, src),
+                call: codec.decode(chainDescription.call, src)
+            }
+        default:
+            throw unexpectedCase(preamble)
     }
 }
 
