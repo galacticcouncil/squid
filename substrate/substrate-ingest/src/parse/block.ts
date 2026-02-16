@@ -242,7 +242,7 @@ export class BlockParser {
 }
 
 
-export function parseRawBlock(spec, validators, raw): BlockData {
+export function parseRawBlock(spec: Spec, validators: Account[], raw: RawBlock): BlockData {
     let bp = new BlockParser(spec, validators, raw)
     let extrinsics = bp.extrinsics()
     let extrinsicIds = new Set(extrinsics.map(e => e.id))
