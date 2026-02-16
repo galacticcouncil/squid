@@ -40,6 +40,7 @@ export function decodeExtrinsic(
     let preamble = meta & 0b11000000
     switch (preamble) {
         case Preamble.Bare:
+            console.log('decoding bare extrinsic');
             return {
                 version,
                 call: codec.decode(chainDescription.call, src)
@@ -52,6 +53,7 @@ export function decodeExtrinsic(
                 call: codec.decode(chainDescription.call, src)
             }
         default:
+            console.log('unexpected case');
             throw unexpectedCase(preamble)
     }
 }
